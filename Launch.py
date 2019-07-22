@@ -71,24 +71,13 @@ U_T_r = sympy.simplify(sympy.trigsimp(U_T_r))
 
 d_U_T_r__d_r = sympy.diff(U_T_r, r)
 
+print("Printing d_U_T_r__d_r")
 sympy.pprint(d_U_T_r__d_r)
-d_U_T_r__d_r = sympy.simplify(sympy.trigsimp(d_U_T_r__d_r))
+#d_U_T_r__d_r = sympy.simplify(sympy.trigsimp(d_U_T_r__d_r))
 d_U_T_r__d_t = d_U_T_r__d_r*d_r__d_t
+sympy.pprint(d_U_T_r__d_t)
+print("Now running simplification")
 d_U_T_r__d_t = sympy.simplify(sympy.trigsimp(d_U_T_r__d_t))
 
-print("Printing U_T_r__r")
-sympy.pprint(d_U_T_r__d_t)
-print("*"*100)
-sympy.pprint(d_U_T_r__d_t)
 
-#U_T_r__r = sympy.simplify(U_T_r__r)
-#sympy.pprint("The potential function is given by:\n",U_T_r__r)
-
-print("Now printing U_T_r")
-sympy.pprint(U_T_r)
-
-print("Now printing alpha")
-sympy.pprint(alpha_r)
-U_T__r = sympy.diff(U_T, r)
-
-sympy.pprint(U_T)
+#Now perform the integration
