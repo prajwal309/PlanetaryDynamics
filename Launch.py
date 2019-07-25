@@ -74,7 +74,7 @@ print("In latex \n")
 print(sympy.latex(alpha_r))
 print("*"*100,"\n\n\n\n")
 
-input("Wait here...")
+
 print("*"*100)
 print("Simplified alpha_r \n")
 alpha_r = sympy.powsimp(sympy.trigsimp(sympy.simplify(alpha_r)))
