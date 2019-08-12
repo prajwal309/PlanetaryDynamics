@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import sympy
 
 #printing
-PPRINT_FLAG = False            #pretty print the  flag in sympy
-LATEX_FLAG = True              #print the variables in latex
+PPRINT_FLAG = False                #pretty print the  flag in sympy
+LATEX_FLAG = True                  #print the variables in latex
+SIMPLIFY_FLAG = False               #the simplify flag is given by
 
 def DotProduct(A, B):
     #Function to take dot product of two vectors A and B of equal length
@@ -16,12 +17,12 @@ def DotProduct(A, B):
     return DotProduct
 
 f = sympy.symbols('f', positive=True)                  #True Anomaly
+f_p = sympy.symbols('f_p', positive=True)              #True Anomaly prime due to tidal distortion
 t = sympy.symbols('t', positive=True)                  #Time
 n = sympy.symbols('n', positive=True)                  #Period
 
-f_p = sympy.symbols('f_p', positive=True)                  #True Anomaly
-n_p = sympy.symbols('n_p', positive=True)                              #Period
-t_p = sympy.symbols('t_p', positive=True)                  #Time
+f_p = sympy.symbols('f_p', positive=True)              #True Anomaly prime due to tidal distortion
+n_p = sympy.symbols('n_p', positive=True)              #Mean motion prime
 
 
 G = sympy.symbols('G', positive=True)                  #Gravitation constant
@@ -50,17 +51,39 @@ Delta = sympy.symbols('Delta', real=True)
 Orbit = [r*cos(f), r*sin(f), sympy.Integer(0)]
 S_0 = [R*sin(theta)*cos(phi), R*sin(theta)*cos(phi), R*cos(theta)]
 S = [R*sin(theta)*cos(phi+n*t), R*sin(theta)*cos(phi+n*t), R*cos(theta)]
-S_p = [R*sin(theta)*cos(phi+n*t+Delta), R*sin(theta)*cos(phi+n*t+Delta), R*cos(theta)]
-
+S = [R*sin(theta)*cos(phi+n*t), R*sin(theta)*cos(phi+n*t), R*cos(theta)]
 
 #Now describe relation
 r_f = a*(1-e**2)/(1+e*cos(f))                            #distance in terms of true anomaly
 Orbit_r = [Item.subs(r, r_f) for Item in Orbit]          #Orbit with r subsituted in terms of true anomaly
-d_r_f__d_f = sympy.diff(r_f, f)                 #differentiating true anomaly in terms of tye anomaly
-d_f__d_t = n*a**2*sympy.sqrt(1-e**2)/r**2       #differentiating true anomaly in terms to time
-d_r__d_t = d_r_f__d_f*d_f__d_t                  #differentiating distance with respect to time
-
 f_r = acos((a*(1- e*e)-r)/(e*r))
+
+
+#No need to differentiate for normal orbit i.e. non primed orbit
+#d_r_f__d_f = sympy.diff(r_f, f)                 #differentiating true anomaly in terms of tye anomaly
+#d_f__d_t = n*a**2*sympy.sqrt(1-e**2)/r**2       #differentiating true anomaly in terms to time
+#d_r__d_t = d_r_f__d_f*d_f__d_t                  #differentiating distance with respect to time
+
+
+#Orbital element in terms of primed factors
+Orbit_p = [r_p*cos(f_p), r_p*sin(f_p), sympy.Integer(0)]
+
+
+#r prime in terms to true anamoly prime
+r_p_f = a*(1-e**2)/(1+e*cos(f_p))
+d_r_p_f__d_f_p = sympy.diff(r_p_f, f_p)
+d_f_p__d_t = n*a**2*sympy.sqrt(1-e**2)/r_p**2        #True Anamoly (prime) relation with respect to the mean anamoly
+d_r_p__d_t = d_r_p_f__d_f_p*d_f_p__d_t               #differentiating distance with respect to time
+
+Orbit_r_p = [Item.subs(r_p, r_p_f) for Item in Orbit_p]          #Orbit prime  with r' subsituted in terms of true anomaly
+
+
+if PPRINT_FLAG:
+    sympy.pprint(d_f_p__d_t)
+
+
+#Surface element for primed factor
+S_p = [R*sin(theta)*cos(phi+n*t+Delta), R*sin(theta)*cos(phi+n*t+Delta), R*cos(theta)]
 
 x = sympy.symbols('x')
 P2 = sympy.Rational(1,2)*(3*x**2 - 1)
@@ -73,146 +96,66 @@ U_T_r_p = -G*Ms*R**2/r_p**3*P2.subs(x,cos(alpha_p))
 
 
 
-#Now differentiating the Tidal force
-d_U_T_r_p = sympy.diff(U_T_r_p, r_p) + sympy.diff(U_T_r_p, alpha_p)
+if SIMPLIFY_FLAG:
+    U_T_r_p = sympy.powsimp(sympy.trigsimp(sympy.simplify(U_T_r_p)))
 
+if PPRINT_FLAG:
+    print("Differentiation of U(T) prime in terms of r(prime)--- before differentiation")
+    sympy.pprint(U_T_r_p)
 
-
-#Replace to sin(p) with cos(p)
-d_U_T_r_p = d_U_T_r_p.subs(sin(alpha_p),sympy.sqrt(1-cos(alpha_p)**2))
-
+if LATEX_FLAG:
+    print("U(T) prime in terms of r(prime) before differentiation and cos value substitution")
+    print(sympy.latex(U_T_r_p))
 
 #Calculate the angle alpha in terms of r and other function
 cos_alpha_r = DotProduct(Orbit_r,S)/(r*R)
 cos_alpha_r = cos_alpha_r.subs(f,f_r)
 
 
-cos_alpha_r_p = DotProduct(Orbit_r,S_p)/(r*R)
+cos_alpha_r_p = DotProduct(Orbit_r_p,S_p)/(r_p*R)
 cos_alpha_r_p = cos_alpha_r_p.subs(f,f_r)
-
-U_T_r_p = -G*Ms*R**2/r_p**3*P2.subs(x,cos(alpha_p))
-
-
-d_U_T_r_p = d_U_T_r_p.subs(cos(alpha_p),cos_alpha_r_p)
-#d_U_T_r_p = sympy.powsimp(sympy.trigsimp(sympy.simplify(d_U_T_r_p)))
-
-sympy.pprint(U_T_r)
-
-sympy.pprint(U_T_r)
-sympy.pprint(cos_alpha_r)
-U_T_r = U_T_r.subs(cos(alpha), cos_alpha_r)
-
-print("U_T_r")
-
-sympy.pprint(U_T_r)
-input("Massive iconography")
-
-print("*"*50)
-sympy.latex(d_U_T_r_p)
-print("*"*50)
-
-
-input("Wait here...")
+alpha_r_p = acos(cos_alpha_r_p)
 
 
 
+#Need to evaluate
+d_alpha_p__d_f_p = sympy.diff(alpha_r_p, f_p)
+d_alpha_p__d_t = d_alpha_p__d_f_p*d_f_p__d_t
 
+if SIMPLIFY_FLAG:
+    d_alpha_p__d_t = sympy.powsimp(sympy.trigsimp(sympy.simplify(d_alpha_p__d_t)))
 
-
-
-
-
-
-
-
-
-
-
-print("*"*100)
-print("cos_alpha_r \n")
 if PPRINT_FLAG:
-    sympy.pprint(cos_alpha_r)
+    print("Differentiation of alpha in terms of f_p")
+    sympy.pprint(d_alpha_p__d_t)
+
 if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(cos_alpha_r))
-print("*"*100,"\n\n\n\n")
+    print("U(T) in terms of r_p")
+    print(sympy.latex(d_alpha_p__d_t))
+    print("*"*50+"\n\n")
 
 
-print("*"*100)
-print("Simplified cos_alpha_r \n")
-cos_alpha_r = sympy.powsimp(sympy.trigsimp(sympy.simplify(cos_alpha_r)))
+#Now differentiating the Tidal force
+d_U_T_r_p__d_t = sympy.diff(U_T_r_p, r_p)*d_r_p__d_t + sympy.diff(U_T_r_p, alpha_p)*d_alpha_p__d_t
+
+
+#Replace to sin(alpha_p) with cos(alpha_p)
+d_U_T_r_p__d_t = d_U_T_r_p__d_t.subs(sin(alpha_p),sympy.sqrt(1-cos(alpha_p)**2))
+
+#Now substituting the value of cos(alpha'(r'))
+d_U_T_r_p__d_t = d_U_T_r_p__d_t.subs(cos(alpha_p),cos_alpha_r_p)
+
+if SIMPLIFY_FLAG:
+    d_U_T_r_p__d_t = sympy.powsimp(sympy.trigsimp(sympy.simplify(d_U_T_r_p__d_t)))
+
+
 if PPRINT_FLAG:
-    sympy.pprint(cos_alpha_r)
+    print("Differentiation of U(T) prime with respect to time before substitution is given by")
+    sympy.pprint(d_U_T_r_p__d_t)
+
 if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(cos_alpha_r))
-print("*"*100,"\n\n\n\n")
-
-
-
-
-print("*"*100)
-print("cos_alpha_r_prime \n")
-if PPRINT_FLAG:
-    sympy.pprint(cos_alpha_r_prime)
-if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(cos_alpha_r_prime))
-print("*"*100,"\n\n\n\n")
-
-
-print("*"*100)
-print("Simplified alpha_r_prime \n")
-cos_alpha_r_prime = sympy.powsimp(sympy.trigsimp(sympy.simplify(cos_alpha_r_prime)))
-if PPRINT_FLAG:
-    sympy.pprint(cos_alpha_r_prime)
-if LATEX_FLAG:
-    print("In latex: \n")
-    print(sympy.latex(cos_alpha_r_prime))
-print("*"*100,"\n\n\n\n")
-
-
-print("*"*100)
-print("U_T_r_prime \n")
-U_T_r_prime = -G*Ms*R**2/r**3*P2.subs(x,cos_alpha_r_prime)
-if PPRINT_FLAG:
-    sympy.pprint(U_T_r_prime)
-if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(U_T_r_prime))
-print("*"*100,"\n\n\n\n")
-
-print("*"*100)
-print("d_U_T_r_prime/d_r \n")
-d_U_T_r_prime__d_r = sympy.diff(U_T_r_prime, r)
-if PPRINT_FLAG:
-    sympy.pprint(d_U_T_r_prime__d_r)
-if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(d_U_T_r_prime__d_r))
-print("*"*100,"\n\n\n\n")
-
-
-print("*"*100)
-print("Simplifying after this")
-print("d_U_T_r\'/d_t")
-d_U_T_r_prime__d_t = d_U_T_r_prime__d_r*d_r__d_t
-if PPRINT_FLAG:
-    sympy.pprint(d_U_T_r_prime__d_t)
-if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(d_U_T_r_prime__d_t))
-print("*"*100,"\n\n\n\n")
-
-print("*"*100)
-print("Simplified d_UT_r\'/d_t")
-d_U_T_r_prime__d_t = sympy.powsimp(sympy.trigsimp(sympy.simplify(d_U_T_r_prime__d_t)))
-if PPRINT_FLAG:
-    sympy.pprint(d_U_T_r_prime__d_t)
-if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(d_U_T_r_prime__d_t))
-print("*"*100,"\n\n\n\n")
+    print("Differentiation of U(T) prime with respect to time before substitution is given by")
+    print(sympy.latex(d_U_T_r_p__d_t))
 
 
 #New set of variables for defining integrand
@@ -223,58 +166,63 @@ g = sympy.symbols('g')                  #g is the local acceleration due to grav
 
 print("*"*100)
 print("Integrand \n")
-Integrand = rho*h2/g*U_T_r*d_U_T_r_prime__d_t
-if PPRINT_FLAG:
-    sympy.pprint(Integrand)
-if LATEX_FLAG:
-    print("In latex \n")
-    print(sympy.latex(Integrand))
-print("*"*100,"\n\n\n\n")
+Integrand = rho*h2/g*U_T_r*d_U_T_r_p__d_t
 
-print("*"*100)
-print("Simplified Integrand")
-Integrand = sympy.powsimp(sympy.trigsimp(sympy.simplify(Integrand)))
 if PPRINT_FLAG:
     sympy.pprint(Integrand)
 if LATEX_FLAG:
     print("In latex \n")
     print(sympy.latex(Integrand))
-print("*"*100,"\n\n\n\n")
+    print("*"*50,"\n\n\n\n")
+
+
+print("Simplified Integrand")
+if SIMPLIFY_FLAG:
+    print("Simplifying the integrand.")
+    Integrand = sympy.powsimp(sympy.trigsimp(sympy.simplify(Integrand)))
+    print(sympy.latex(Integrand))
+    print("*"*100,"\n\n\n\n")
 
 #Performing Integration in theta
 
 print("*"*100)
 print("Expression after first integration:")
-Integration1 = sympy.integrate(Integrand*r*r*sin(theta), theta)
+Integration1 = sympy.integrate(Integrand*R*R*sin(theta), theta)
 Result1 = Integration1.subs(theta,sympy.pi) - Integration1.subs(theta,0)
-#Result1 =  sympy.powsimp(sympy.trigsimp(sympy.simplify(Result1)))
+
 if PPRINT_FLAG:
     sympy.pprint(Result1)
 if LATEX_FLAG:
-    print("In latex \n")
-    printing.latex(Result1)
-print("*"*100,"\n\n\n\n")
+    print("Integration 1 in latex \n")
+    print(sympy.latex(Result1))
+    print("*"*100,"\n\n")
 
 #Performing integration in phi
 Integration2 = sympy.integrate(Result1, phi)
 
 print("*"*100)
 print("After Second Integration")
-FinalValue = Integration2.subs(Integration2, 2*sympy.pi) - Integration.subs(Integration2, 0)
+FinalValue = Integration2.subs(phi, 2*sympy.pi) - Integration2.subs(phi, 0)
 if PPRINT_FLAG:
     sympy.pprint(FinalValue)
 if LATEX_FLAG:
-    print("In latex \n")
-    printing.latex(FinalValue)
+    print("After integration in latex: Final Value--- Not simplified yet:: \n")
+    print(sympy.latex(FinalValue))
 print("*"*100, "\n\n\n\n" )
 
-print("Now simplifying the equation")
+
+
+print("Now simplifying the final value")
 FinalValue = sympy.powsimp(sympy.trigsimp(sympy.simplify(FinalValue)))
+
+
+#simplification in terms of r prime by substitution
+#simplification in terms of substituting to r
 print("*"*100)
 print("The simplified final expression is given by:")
 if PPRINT_FLAG:
     sympy.pprint(FinalValue)
 if LATEX_FLAG:
-    print("In latex \n")
-    printing.latex(FinalValue)
+    print("Simplified final expression: \n")
+    print(sympy.latex(FinalValue))
 print("*"*100, "\n\n\n\n")
