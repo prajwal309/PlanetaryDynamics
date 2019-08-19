@@ -103,6 +103,7 @@ d_cos_alpha_r_p__d_t =  sympy.powsimp(sympy.trigsimp(sympy.simplify(d_cos_alpha_
 
 #Now differentiate the tidal force
 FirstTerm = sympy.diff(U_T_r_p,r_p)*d_r_p__d_t
+FirstTerm = FirstTerm.subs(sympy.sqrt(1-e*e), beta)
 FirstTerm = sympy.powsimp(sympy.trigsimp(sympy.simplify(FirstTerm)))
 print("The first term of the differentiating the tidal force becomes:")
 print(sympy.latex(FirstTerm))
@@ -120,9 +121,11 @@ print("*"*100)
 DivideBy = sympy.diff(cos(alpha_p),alpha_p)
 SecondTerm = sympy.diff(U_T_r_p,alpha_p)/DivideBy*d_cos_alpha_r_p__d_t
 SecondTerm = sympy.powsimp(sympy.trigsimp(sympy.simplify(SecondTerm)))
-print("The second term of differentiation becomes:")
-print(sympy.latex(SecondTerm))
+SecondTerm = SecondTerm.subs(cos(alpha_p),cos_alpha_r_p)
+SecondTerm = SecondTerm.subs(sympy.sqrt(1-e*e), beta)
 
+print("The second term of after simplification becomes:")
+print(sympy.latex(SecondTerm))
 print("*"*100)
 
 #Now the differentiation term is given by:
@@ -130,10 +133,11 @@ d_U_T_r_p__d_t = FirstTerm + SecondTerm
 
 
 print("*"*100)
+sympy.pprint(d_U_T_r_p__d_t)
 print("d_U_T_r_p__d_t")
 print(sympy.latex(d_U_T_r_p__d_t))
 print("*"*100)
-print("After simplification")
+#print("After simplification")
 d_U_T_r_p__d_t = sympy.powsimp(sympy.trigsimp(sympy.simplify(d_U_T_r_p__d_t)))
 print(sympy.latex(d_U_T_r_p__d_t))
 print("*"*100)
@@ -142,18 +146,17 @@ print("*"*100)
 cos_alpha_r = DotProduct(Orbit_Norm,S_Norm)
 cos_alpha_r = sympy.powsimp(sympy.trigsimp(sympy.simplify(cos_alpha_r)))
 
-U_T_r = -G*Ms*R**2/r**3*P2.subs(x,cos(alpha))
+U_T_r = -G*Ms*R**2/r**3*P2.subs(x,cos_alpha_r)
 U_T_r = U_T_r.subs(cos(alpha), cos_alpha_r)
 U_T_r = sympy.powsimp(sympy.trigsimp(sympy.simplify(U_T_r)))
 
 print("*"*100)
 print("U_T_r")
-#sympy.pprint(U_T_r)
-#print("+"*100)
+sympy.pprint(U_T_r)
+print("+"*100)
 print("Latex version")
 print(sympy.latex(U_T_r))
 print("*"*100)
-
 
 
 #New set of variables for defining integrand
@@ -163,12 +166,16 @@ g = sympy.symbols('g')                  #g is the local acceleration due to grav
 
 
 Integrand = rho*h2/g*U_T_r*d_U_T_r_p__d_t
-#simplifying the integrand
-Integrand = sympy.powsimp(sympy.trigsimp(sympy.simplify(Integrand)))
+
+print("Latex version")
+print(sympy.latex(Integrand))
+print("*"*100)
 Integrand = Integrand.subs(sympy.sqrt(1-e*e), beta)
+
+#Integrand = Integrand.subs()
 print("*"*100)
 print("Integrand")
-#sympy.pprint(Integrand)
+sympy.pprint(Integrand)
 #print("+"*100)
 print("Latex version")
 print(sympy.latex(Integrand))
@@ -179,10 +186,10 @@ print("*"*100)
 print("*"*100)
 print("Expression after first integration:")
 Integration1 = sympy.integrate(Integrand*R*R*sin(theta), theta)
-Integration1 = sympy.powsimp(sympy.trigsimp(sympy.simplify(Integration1)))
+Result1 = Integration1.subs(theta,sympy.pi) - Integration1.subs(theta,0)
+Result1 = sympy.powsimp(sympy.trigsimp(sympy.simplify(Result1)))
 #sympy.pprint(Integration1)
 
-Result1 = Integration1.subs(theta,sympy.pi) - Integration1.subs(theta,0)
 #print("*"*100)
 print("After the first integration")
 #sympy.pprint(Result1)
@@ -194,12 +201,15 @@ print("*"*100,"\n\n")
 Integration2 = sympy.integrate(Result1, phi)
 #Integration2 = sympy.powsimp(sympy.trigsimp(sympy.simplify(Integration2)))
 FinalValue = Integration2.subs(phi, 2*sympy.pi) - Integration2.subs(phi, 0)
-FinalValue = sympy.powsimp(sympy.trigsimp(sympy.simplify(FinalValue)))
 
-print("*"*100)
-print("Final expression that is yielded")
 #sympy.pprint(FinalValue)
 print("*"*100)
 print("After integration in latex: Final Value--- Not simplified yet:: \n")
+print(sympy.latex(FinalValue))
+print("*"*100, "\n\n\n\n" )
+
+FinalValue = sympy.powsimp(sympy.trigsimp(sympy.simplify(FinalValue)))
+print("*"*100)
+print("After simplification \n")
 print(sympy.latex(FinalValue))
 print("*"*100, "\n\n\n\n" )
